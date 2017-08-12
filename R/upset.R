@@ -28,8 +28,11 @@
 #' @param decreasing How the variables in order.by should be ordered. "freq" is decreasing (greatest to least) and "degree" is increasing (least to greatest)
 #' @param show.numbers Show numbers of intersection sizes above bars
 #' @param number.angles The angle of the numbers atop the intersection size bars
-#' @param group.by How the data should be grouped ("degree" or "sets")
+#' @param aggregate How the data should be aggregated ("degree", "overlap" or "sets")
 #' @param cutoff The number of intersections from each set (to cut off at) when aggregating by sets
+#' @param degree Intersection degree when aggregating by overlap
+#' @param collect.aggregates If aggregating, set to true to display the aggregates as summed groups
+#' @param expand.aggregates A list of character vectors by set name to expand. By default, all aggregates will be expanded.
 #' @param queries Unified querie of intersections, elements, and custom row functions. Entered as a list that contains a list of
 #'        queries. query is the type of query being conducted. params are the parameters of the query (if any). color is the color of the points on the
 #'        plot that will represent the query. If no color is selected one will be provided automatically. active takes TRUE or FALSE, and if
@@ -116,8 +119,9 @@ upset <- function(data, nsets = 5, nintersects = 40, sets = NULL, keep.order = F
                   matrix.color = "gray23", main.bar.color = "gray23", mainbar.y.label = "Intersection Size", mainbar.y.max = NULL,
                   sets.bar.color = "gray23", sets.x.label = "Set Size", point.size = 2.2, line.size = 0.7,
                   mb.ratio = c(0.70,0.30), expression = NULL, att.pos = NULL, att.color = main.bar.color, order.by = c("freq", "degree"),
-                  decreasing = c(T, F), show.numbers = "yes", number.angles = 0, group.by = "degree",cutoff = NULL,
-                  queries = NULL, query.legend = "none", shade.color = "gray88", shade.alpha = 0.25, matrix.dot.alpha =0.5,
+                  decreasing = c(T, F), show.numbers = "yes", number.angles = 0, group.by = "degree",cutoff = NULL, overlap.degree = 1, 
+                  collect.aggregates = F, expand.aggregates = NULL, queries = NULL, query.legend = "none", 
+                  shade.color = "gray88", shade.alpha = 0.25, matrix.dot.alpha =0.5,
                   empty.intersections = NULL, color.pal = 1, boxplot.summary = NULL, attribute.plots = NULL, scale.intersections = "identity",
                   scale.sets = "identity", text.scale = 1, set_size.angles = 0 ){
   
@@ -157,7 +161,8 @@ upset <- function(data, nsets = 5, nintersects = 40, sets = NULL, keep.order = F
     Set_names <- order_sets(New_data, Set_names)
     }
     All_Freqs <- Counter(New_data, Num_of_set, first.col, Set_names, nintersects, main.bar.color,
-                         order.by, group.by, cutoff, empty.intersections, decreasing)
+                         order.by, group.by, cutoff, overlap.degree, collect.aggregates, expand.aggregates, 
+                         empty.intersections, decreasing)
   }
   Matrix_setup <- Create_matrix(All_Freqs)
   labels <- Make_labels(Matrix_setup)

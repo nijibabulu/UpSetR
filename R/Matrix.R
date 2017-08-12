@@ -35,14 +35,19 @@ Create_layout <- function(setup, mat_color, mat_col, matrix_dot_alpha){
     if(Matrix_layout$value[i] > as.integer(0)){
       Matrix_layout$color[i] <- mat_color
       Matrix_layout$alpha[i] <- 1
-      Matrix_layout$Intersection[i] <- paste(Matrix_layout$x[i], "yes", sep ="")
     }
     else{
-      
       Matrix_layout$color[i] <- "gray83"
       Matrix_layout$alpha[i] <- matrix_dot_alpha
+    }
+    
+    Matrix_layout$scale[i] = ifelse(Matrix_layout$value[i] == 0.5,0.5,1)
+
+    if(any(setup[,Matrix_layout[i,]$x] == 0.5) || Matrix_layout$value[i] == 0) {
       Matrix_layout$Intersection[i] <- paste(i, "No", sep = "")
-    } 
+    } else {
+      Matrix_layout$Intersection[i] <- paste(Matrix_layout$x[i], "yes", sep ="")
+    }
   }
   if(is.null(mat_col) == F){
     for(i in 1:nrow(mat_col)){
@@ -103,7 +108,9 @@ Make_matrix_plot <- function(Mat_data,Set_size_data, Main_bar_data, point_size, 
                                                               ymin = "y_min", ymax = "y_max"),
                               fill = shading_data$shade_color, alpha = shade_alpha)
                   + geom_point(data= Mat_data, aes_string(x= "x", y= "y"), colour = Mat_data$color,
-                               size= point_size, alpha = Mat_data$alpha)
+                               size= point_size*Mat_data$scale**2, alpha = Mat_data$alpha)
+                  + geom_point(data= Mat_data, aes_string(x= "x", y= "y"), colour = Mat_data$color,
+                               size= point_size, alpha = Mat_data$alpha, shape=1)
                   + geom_line(data= Mat_data, aes_string(group = "Intersection", x="x", y="y",
                                                          colour = "color"), size = line_size)
                   + scale_color_identity())

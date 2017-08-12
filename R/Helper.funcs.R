@@ -91,13 +91,28 @@ Number_of_sets <- function(sets){
   return(temp)
 }
 
+Get_degree_agreggates <- function(data, num_sets, order_mat, decrease){
+  for(i in 1:nrow(data)){
+    data$degree[i] <- rowSums(data[ i ,1:num_sets])
+  }
+  order_cols <- c()
+  for(i in 1:length(order_mat)){
+    order_cols[i] <- match(order_mat[i], colnames(data))
+  }
+  # if(length(order_cols)==2 && order_cols[1]>order_cols[2]){decrease <- rev(decrease)}
+  for(i in 1:length(order_cols)){
+    logic <- decrease[i]
+    Freqs <- data[order(data[ , order_cols[i]], decreasing = logic), ]
+  }
+  Freqs
+}
 
-## Creates data set if data is aggregated by sets
-Get_aggregates <- function(data, num_sets, order_mat, cut){
+## Creates data set if data is aggregated by sets or overlaps
+Get_aggregates <- function(data, num_sets, order_mat, cut, degree=1, collect=F, expand=NULL){
   temp_data <- list()
   set_agg <- list()
-  for(i in 1:num_sets){
-    temp_data <- data[which(data[ , i] == 1), ]
+  for(intersection in combn(num_sets,degree,simplify=F)){
+    temp_data <- data[which(rowSums(subset(data,select=intersection)) == degree), ]
     for(i in 1:nrow(temp_data)){
       temp_data$degree[i] <- rowSums(temp_data[ i ,1:num_sets])
     }
@@ -114,10 +129,28 @@ Get_aggregates <- function(data, num_sets, order_mat, cut){
       }
       temp_data <- temp_data[order(temp_data[ , i], decreasing = logic), ]
     }
+    if(collect == T) {
+      collected_data <- t(colSums(temp_data))
+      collected_data[,intersection] <- 1
+      collected_data[,which(!seq(num_sets) %in% intersection)] <- 0.5
+      set_agg <-rbind(set_agg,as.data.frame(collected_data))
+    }
     if(is.null(cut) == F){
       temp_data <- temp_data[1:cut, ]
     }
+    # don't add any of the aggregates not requested.
+    if(is.null(expand) == F &
+      is.na(Position(function(x) identical(x,intersection), expand)) == T) {
+        next 
+    }
     set_agg <- rbind(set_agg, temp_data)
+  }
+  if(is.null(expand) == F) {
+    # FIXME!
+    logic <- matrix(as.vector(set_agg[,1:num_sets] == 1),ncol=num_sets)
+    set_agg$expanded <- apply(logic,1,function(x) any(sapply(expand, function(e) all(floor(x[e])))))
+    set_agg <- set_agg[order(set_agg$expanded,decreasing=T),]
+    set_agg <- set_agg[,1:(ncol(set_agg)-1)]
   }
   return(set_agg)
 }
