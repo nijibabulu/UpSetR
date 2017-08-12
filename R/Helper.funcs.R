@@ -128,27 +128,30 @@ Get_aggregates <- function(data, num_sets, order_mat, cut, degree=1, collect=F, 
         logic <- F
       }
       temp_data <- temp_data[order(temp_data[ , i], decreasing = logic), ]
+      
     }
+    expand_intersection = is.null(expand) | 
+      is.na(Position(function(x) identical(x,intersection), expand)) == F
+    
     if(collect == T) {
-      collected_data <- t(colSums(temp_data))
+      collected_data <- data.frame(t(colSums(temp_data)))
       collected_data[,intersection] <- 1
       collected_data[,which(!seq(num_sets) %in% intersection)] <- 0.5
+      collected_data$degree <- length(intersection)
+      collected_data$expanded <- ifelse(expand_intersection,1,0)
       set_agg <-rbind(set_agg,as.data.frame(collected_data))
     }
     if(is.null(cut) == F){
       temp_data <- temp_data[1:cut, ]
     }
     # don't add any of the aggregates not requested.
-    if(is.null(expand) == F &
-      is.na(Position(function(x) identical(x,intersection), expand)) == T) {
-        next 
+    if(expand_intersection) {
+      temp_data$expanded <- 1
+      set_agg <- rbind(set_agg, temp_data) 
     }
-    set_agg <- rbind(set_agg, temp_data)
+    
   }
   if(is.null(expand) == F) {
-    # FIXME!
-    logic <- matrix(as.vector(set_agg[,1:num_sets] == 1),ncol=num_sets)
-    set_agg$expanded <- apply(logic,1,function(x) any(sapply(expand, function(e) all(floor(x[e])))))
     set_agg <- set_agg[order(set_agg$expanded,decreasing=T),]
     set_agg <- set_agg[,1:(ncol(set_agg)-1)]
   }
