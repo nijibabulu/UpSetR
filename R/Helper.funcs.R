@@ -91,7 +91,7 @@ Number_of_sets <- function(sets){
   return(temp)
 }
 
-Get_degree_agreggates <- function(data, num_sets, order_mat, decrease){
+Get_degree_agreggates <- function(data, num_sets, order_mat, decrease, exclude_intersections=NULL){
   for(i in 1:nrow(data)){
     data$degree[i] <- rowSums(data[ i ,1:num_sets])
   }
@@ -108,9 +108,11 @@ Get_degree_agreggates <- function(data, num_sets, order_mat, decrease){
 }
 
 ## Creates data set if data is aggregated by sets or overlaps
-Get_aggregates <- function(data, num_sets, order_mat, cut, degree=1, collect=F, expand=NULL){
+Get_aggregates <- function(data, num_sets, order_mat,  group_aggregates=T, cut=NULL, 
+                           exclude_intersections=NULL, degree=1, collect=F, expand=NULL){
   temp_data <- list()
   set_agg <- list()
+  
   for(intersection in combn(num_sets,degree,simplify=F)){
     temp_data <- data[which(rowSums(subset(data,select=intersection)) == degree), ]
     for(i in 1:nrow(temp_data)){
@@ -130,9 +132,12 @@ Get_aggregates <- function(data, num_sets, order_mat, cut, degree=1, collect=F, 
       temp_data <- temp_data[order(temp_data[ , i], decreasing = logic), ]
       
     }
+    # we expand by default but if specific intersections were requested, 
+    # check if we're expanding this intersection.
     expand_intersection = is.null(expand) | 
       is.na(Position(function(x) identical(x,intersection), expand)) == F
     
+    # summarize the aggregated intersections with maybes (0.5) for all other sets
     if(collect == T) {
       collected_data <- data.frame(t(colSums(temp_data)))
       collected_data[,intersection] <- 1
@@ -151,10 +156,19 @@ Get_aggregates <- function(data, num_sets, order_mat, cut, degree=1, collect=F, 
     }
     
   }
-  if(is.null(expand) == F) {
+  # order by the aggregates unless we're not
+  if(group_aggregates == T) {
     set_agg <- set_agg[order(set_agg$expanded,decreasing=T),]
-    set_agg <- set_agg[,1:(ncol(set_agg)-1)]
+  } else {
+    set_agg <- set_agg[!duplicated(set_agg[,1:num_sets]),]
+    #set_agg <- set_agg[order(set_agg$expanded,decreasing=T),]
+    set_agg <- set_agg[order(rowSums(set_agg[,1:num_sets] == 0.5),
+                             num_sets-set_agg$degree,
+                             set_agg$freq,
+                             decreasing=T),]
   }
+  set_agg <- set_agg[,1:(ncol(set_agg)-1)]
+  
   return(set_agg)
 }
 

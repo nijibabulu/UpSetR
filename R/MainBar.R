@@ -3,7 +3,8 @@
 ## Counts the frequency of each intersection being looked at and sets up data for main bar plot.
 ## Also orders the data for the bar plot and matrix plot
 Counter <- function(data, num_sets, start_col, name_of_sets, nintersections, mbar_color, order_mat,
-                    aggregate, cut, overlap_degree, collect, expand, empty_intersects, decrease){
+                    aggregate, cut, overlap_degree, collect, expand, group_aggregates, 
+                    exclude_intersects, empty_intersects, decrease){
   temp_data <- list()
   Freqs <- data.frame()
   end_col <- as.numeric(((start_col + num_sets) -1))
@@ -40,11 +41,12 @@ Counter <- function(data, num_sets, start_col, name_of_sets, nintersections, mba
   #Aggregation by sets
   else if(tolower(aggregate) == "sets")
   {
-    Freqs <- Get_aggregates(Freqs, num_sets, order_mat, cut, collect=collect, expand=expand)
+    Freqs <- Get_aggregates(Freqs, num_sets, order_mat, group_aggregates, cut, collect=collect, expand=expand)
   }
   else if(tolower(aggregate) == "overlap")
   {
-    Freqs <- Get_aggregates(Freqs, num_sets, order_mat, cut=NULL, collect=collect, expand=expand, degree=overlap_degree)
+    Freqs <- Get_aggregates(Freqs, num_sets, order_mat, group_aggregates=group_aggregates, cut=NULL, 
+                            collect=collect, expand=expand, degree=overlap_degree)
   }
   #delete rows used to order data correctly. Not needed to set up bars.
   delete_row <- (num_sets + 2)
