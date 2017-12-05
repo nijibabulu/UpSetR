@@ -115,6 +115,10 @@ Get_aggregates <- function(data, num_sets, order_mat,  group_aggregates=T, cut=N
   
   for(intersection in combn(num_sets,degree,simplify=F)){
     temp_data <- data[which(rowSums(subset(data,select=intersection)) == degree), ]
+    # avoid aggregates which do not have any items
+    if(nrow(temp_data) == 0) {
+      next
+    }
     for(i in 1:nrow(temp_data)){
       temp_data$degree[i] <- rowSums(temp_data[ i ,1:num_sets])
     }
